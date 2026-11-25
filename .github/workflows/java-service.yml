@@ -75,7 +75,14 @@ jobs:
       - name: Run Build and Tests with Testcontainers
         env:
           GITHUB_TOKEN: ${{ secrets.github-token }}
-        run: mvn clean verify -B
+        # The wrapper pins the Maven of the project, as every developer builds it. With the Maven of the runner, a
+        # project that loads a build extension (Spring Cloud Contract) failed to download its dependencies (LAB-129).
+        run: |
+          if [ -f ./mvnw ]; then
+            bash ./mvnw -B -ntp clean verify
+          else
+            mvn -B clean verify
+          fi
 
       - name: Evaluate JaCoCo Line Coverage (>= ${{ inputs.coverage-threshold }}%)
         run: |
