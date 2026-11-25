@@ -71,6 +71,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           sbom: true
           provenance: mode=max
+          # For Dockerfiles that download from GitHub Packages (LAB-129). A secret, so it stays out of the layers;
+          # a Dockerfile that does not mount it ignores it.
+          secrets: |
+            github_token=${{ secrets.github-token }}
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.5.0
@@ -88,7 +92,7 @@ jobs:
         run: |
           echo "Verificando firma criptográfica de ${{ inputs.image-name }}@${DIGEST}..."
           cosign verify "${{ inputs.image-name }}@${DIGEST}" \
-            --certificate-identity-regexp "^https://github.com/${{ github.repository_owner }}/.*" \
+            --certificate-identity-regexp "(?i)^https://github\.com/${{ github.repository_owner }}/.*" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
 
       - name: Output summary
